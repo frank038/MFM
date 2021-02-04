@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""
+compress the selected items in tar.gz format
+"""
+import libarchive
+import os
+
+# 1 = on selected item(s); 2 = on background; 3 = both
+mtype = 1
+
+# this name appears in the menu
+name = "Compress in tar.gz"
+# the command to launch
+command = ""
+# position in the menu: int -1 means append only
+# or in this string form: "pN"
+# p: 0 or 1 or 2 or 3: 0 no separators, 1 separator above, 2 separator below, 3 both separator
+# N: position, suggested > 4
+# some menu items could be hidden so the position must consider them
+position = -1
+
+# enabled: if return is equal to 1 this script will be enabled
+
+""" 
+path is the full path (path and name) list of selected items
+if this script is called from the selected item(s),
+or the working dir if it is called clicking in the background
+"""
+
+# list of selected items
+item_list = []
+
+def enabled(fpath):
+    if len(fpath) > 0:
+        global item_list
+        item_list = fpath
+        return 1
+    else:
+        return 0
+
+def nname():
+    return name
+
+# if this returns "" the ModuleClass will be executed
+def ccommand(IV):
+    return command
+
+def ttype():
+    return mtype
+
+def pposition():
+    return position
+    
+class ModuleClass():
+    def __init__(self, wiconview):
+        dname = wiconview.working_path
+        curr_dir = os.getcwd()
+        try:
+            os.chdir(dname)
+            cname = ""
+            # if one item to compress
+            if len(item_list) == 1:
+                cname = os.path.basename(item_list[0])
+            # if more then one item to compress
+            else:
+                cname = os.path.basename(os.path.dirname(item_list[0]))
+            # if the name already exists at destination
+            if os.path.exists(cname+'.tar.gz'):
+                i = 1
+                while i:
+                    nn = cname+"_("+str(i)+")"
+                    if os.path.exists(nn+'.tar.gz'):
+                        i += 1
+                    else:
+                        cname = nn
+                        i = 0
+            
+            with libarchive.file_writer(cname+'.tar.gz', 'ustar', 'gzip') as archive:
+                for el in item_list:
+                    fname = os.path.basename(el)
+                    archive.add_files(fname)
+            os.chdir(curr_dir)
+        except:
+            os.chdir(curr_dir)

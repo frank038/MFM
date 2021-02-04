@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""
+decompress the selected compressed item at destination
+"""
+from gi.repository import Gio
+import libarchive
+import os
+
+# 1 = on selected item(s); 2 = on background; 3 = both
+mtype = 1
+
+# this name appears in the menu
+name = "Decompress"
+# the command to launch
+command = ""
+# position in the menu: int -1 means append only
+# or in this string form: "pN"
+# p: 0 or 1 or 2 or 3: 0 no separators, 1 separator above, 2 separator below, 3 both separator
+# N: position, suggested > 4
+# some menu items could be hidden so the position must consider them
+position = -1
+
+# enabled: if return is equal to 1 this script will be enabled
+
+""" 
+path is the full path (path and name) list of selected items
+if this script is called from the selected item(s),
+or the working dir if it is called clicking in the background
+"""
+
+def enabled(fpath):
+    # one item only
+    if len(fpath) == 1:
+        #if the mimetype is supported
+        file = Gio.File.new_for_path(fpath[0])
+        file_info = file.query_info('standard::content-type', Gio.FileQueryInfoFlags.NONE, None)
+        ftype = Gio.FileInfo.get_content_type(file_info)
+        if ftype in ["application/x-compressed-tar", "application/zip", "application/x-cd-image", "application/x-tar",
+                    "application/vnd.comicbook+zip", "application/x-7z-compressed", "application/x-bzip-compressed-tar"]:
+            return 1
+        else:
+            return 0
+    else:
+        return 0
+
+def nname():
+    return name
+
+# if this returns "" the ModuleClass will be executed
+def ccommand(IV):
+    return command
+
+def ttype():
+    return mtype
+
+def pposition():
+    return position
+    
+class ModuleClass():
+    def __init__(self, wiconview):
+        self.wiconview = wiconview
+        iterpath = self.wiconview.IV.get_selected_items()[0]
+        model = self.wiconview.IV.get_model()
+        fname = model[iterpath][1]
+        dname = model[iterpath][3]
+        item_path = os.path.join(dname, fname)
+        (nroot, suffix) = os.path.splitext(fname)
+        ndir_name = nroot
+        if os.path.exists(os.path.join(dname, ndir_name)):
+            i = 1
+            while i:
+                if os.path.exists(os.path.join(dname, ndir_name+"_("+str(i)+")")):
+                    i += 1
+                else:
+                    ndir_name = ndir_name+"_("+str(i)+")"
+                    i = 0
+
+        try:
+            curr_dir = os.getcwd()
+            os.chdir(dname)
+            os.mkdir(ndir_name)
+            os.chdir(os.path.join(dname, ndir_name))
+            libarchive.extract_file(os.path.join(dname, fname))
+            os.chdir(curr_dir)
+        except:
+            os.chdir(curr_dir)

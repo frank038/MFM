@@ -1,0 +1,13 @@
+POWNER = "Owner"
+PACCESS = "Access"
+PGROUP = "Group"
+POTHERS = "Others"
+PREONLY =  "Read only"
+PWRONLY = "Write only"
+PREWR = "Read and Write"
+PNONE = "None"
+PEXECASPROG = "Execute as program"
+PME = "  Me  "
+PNOTME = "Not Me"
+PCHOWNER = "Change owner"
+
