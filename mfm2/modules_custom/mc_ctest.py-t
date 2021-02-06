@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+"""
+add one button in the main window
+"""
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Pango
+# size of the image of button in the toolbar
+from cfg import ITSIZE
+
+module_name = "Test custom button"
+
+# 1 window - 2 notebook
+module_type = 1
+
+def mmodule_type():
+    return module_type
+
+class ModuleCustom():
+    
+    def __init__(self, window):
+        
+        self.window = window
+        button = Gtk.Button("MM")
+        button.show()
+        button.props.xalign = 0.5
+        self.window.cgrid.attach(button, 0,0,1,1)
+        button.connect("clicked", self.on_click)
+        
+    def on_click(self, button):
+        print("MMMMM")
+

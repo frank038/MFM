@@ -54,7 +54,7 @@ class SignalObject(GObject.Object):
     @propList.setter
     def propList(self, data):
         self._list.append(data)
-    
+
 
 class cThread(threading.Thread):
     
@@ -66,10 +66,9 @@ class cThread(threading.Thread):
         self.action = action
         self.pathdest = pathdest
         # action to perform if an item with the same name is found at destination
-        # 1 automatic suffix - 2 overwrite - 3 rename or merge - 4 backup the existet file at destination
+        # 1 automatic suffix - 2 overwrite - 4 backup the existet file at destination
         # 5 ignore the item(s) - 6 means no same filename at destination
         self.atype = atype
-
     
     def run(self):
         time.sleep(1)
@@ -79,7 +78,6 @@ class cThread(threading.Thread):
         else:
             self.item_op()
         
-    
     ## self.atype 1 or 3 or 4
     # add a suffix to the filename if the file exists at destination
     def faddSuffix(self, dest):
@@ -96,7 +94,7 @@ class cThread(threading.Thread):
                 else:
                     dest = os.path.join(dir_name, nn)
                     i = 0
-            
+            #
             return dest
     
     # add the suffix to the name
@@ -111,7 +109,7 @@ class cThread(threading.Thread):
         if not self.atype in [1,2,3,4,5,6]:
             return
         
-        #
+        # for the report
         self.items_skipped = ""
         # action: copy 1 - cut 2
         action = self.action
@@ -123,7 +121,7 @@ class cThread(threading.Thread):
             commSfx = "_{}.{}.{}_{}.{}.{}".format(z.year, z.month, z.day, z.hour, z.minute, z.second)
         #
         for dfile in self.item_list:
-            self.event.wait(1.0)
+            self.event.wait(0.1)
             
             # interrupted by the user
             if self.signal.propInt == -1:
@@ -132,7 +130,6 @@ class cThread(threading.Thread):
             self.signal.propName = str(dfile)
             
             self.on_item(dfile, action, commSfx)
-            
         
         # all tasks finished
         self.signal.propInt = -2
@@ -156,9 +153,6 @@ class cThread(threading.Thread):
             if os.path.isdir(dfile):
                 # full path at destination
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
-                #
-                # for the items in the dir: 1 automatic - 2 overwrite - 3 new name - 4 backup - 5 ignore
-                #dcode = self.atype
                 #
                 # if not the exactly same item
                 if dfile != tdest:
@@ -219,7 +213,8 @@ class cThread(threading.Thread):
                                     a = os.path.join(sdir, item)
                                     a_temp = a[len(base_src)+1:]
                                     b = os.path.join(base_dst, a_temp)
-                                    #
+                                    # if exists a file/link/other/broken link at destination it is renamed
+                                    # no folder if it cannot be renamed
                                     if os.path.exists(b) or os.path.islink(b):
                                         if not os.path.isdir(b):
                                             if USE_DATE:
@@ -231,11 +226,14 @@ class cThread(threading.Thread):
                                             except Exception as E:
                                                 self.items_skipped += "{}\n{}\n------------\n".format(a, str(E))
                                                 continue
-                                    # 
+                                    #
                                     try:
-                                        os.makedirs(b, exist_ok=False)
+                                        if not os.path.exists(b):
+                                            os.makedirs(b, exist_ok=False)
                                     except Exception as E: 
                                         self.items_skipped += "{}\n{}\n------------\n".format(a, str(E))
+                                #
+                                #############
                                 #
                                 for item in ffile:
                                     a = os.path.join(sdir, item)
@@ -243,11 +241,13 @@ class cThread(threading.Thread):
                                     b = os.path.join(base_dst, a_temp)
                                     ## rename the files if they exists at destination 
                                     if self.atype == 4:
+                                        ## rename the files if they exists at destination 
                                         if os.path.exists(b) or os.path.islink(b):
                                             if USE_DATE:
                                                 ret = self.faddSuffix2(commSfx, b)
                                             else:
                                                 ret = self.faddSuffix(b)
+                                            #
                                             try:
                                                 shutil.move(b, ret)
                                             except  Exception as E:
@@ -261,6 +261,7 @@ class cThread(threading.Thread):
                                             shutil.move(a, b)
                                     except Exception as E:
                                         self.items_skipped += "{}\n{}\n------------\n".format(a, str(E))
+                            #
                             # check il the folder is empty and if so remove it
                             if action == 2:
                                 IS_NOT_EMPTY = 0
@@ -270,12 +271,14 @@ class cThread(threading.Thread):
                                         break
                                 #
                                 if IS_NOT_EMPTY:
+                                    # the folder is not empty - cannot be deleted
                                     self.items_skipped += "{}\n{}\n------------\n".format(dfile, "Cannot remove it: not empty")
                                 else:
                                     try:
                                         shutil.rmtree(dfile)
                                     except  Exception as E:
                                         self.items_skipped += "{}\n{}\n------------\n".format(dfile, str(E))
+                #
                 # origin and destination are exactly the same directory
                 else:
                     # 1 automatic
@@ -291,7 +294,7 @@ class cThread(threading.Thread):
                     # 2 overwrite
                     elif self.atype == 2:
                         self.items_skipped += "{}\nExactly the same folder:\n{}\n------------\n".format(os.path.basename(tdest), "Skipped")
-                    # 3 rename - 4 backup
+                    # 4 backup
                     elif self.atype == 4:
                         if action == 1 or action == 2:
                             try:
@@ -302,6 +305,7 @@ class cThread(threading.Thread):
                     # 5 ignore
                     elif self.atype == 5:
                         pass
+        ###########
         # file or link/broken link or else
         else:
             tdest = os.path.join(self.pathdest, os.path.basename(dfile))
@@ -324,7 +328,7 @@ class cThread(threading.Thread):
                             else:
                                 self.items_skipped += "{}\nExactly the same file:\n{}\n------------\n".format(dfile, "Skipped")
                     except Exception as E:
-                        self.items_skipped += "{}\n{}\n------------\n".format(dfile, str(E))
+                        self.items_skipped += "{}\n{}555\n------------\n".format(dfile, str(E))
                 # 2 overwrite
                 elif self.atype == 2:
                     try:
@@ -357,6 +361,7 @@ class cThread(threading.Thread):
                 # 5 ignore
                 elif self.atype == 5:
                     pass
+            # 
             # it doesnt exist at destination
             else:
                 # if broken link rename
@@ -390,7 +395,6 @@ class CopyDialog(Gtk.Window):
         self.window = window
         #
         self.data = unquote(self.list_data.decode()).split("\n")
-        #
         # the operation to perform: copy - cut - link
         self.CONACT = self.data[0]
         # the list of all items
@@ -438,6 +442,7 @@ class CopyDialog(Gtk.Window):
         
         vbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         vbox1.add(vbox)
+        #
         self.button3 = Gtk.Button(ICCANCEL)
         self.button3.connect("clicked", self.on_cancel)
         vbox1.add(self.button3)
@@ -463,13 +468,14 @@ class CopyDialog(Gtk.Window):
         thread = cThread(self.signal, self.list_items, self.CONACT, self.destpath, ret)
         thread.start()
         #
+        time.sleep(0.1)
         self.show_all()
 
 
     def on_notify_foo_int(self, obj, gparamstring):
         # -2 all tasks finished, -1 tasks interrupted by the user
         ret_sig = self.signal.propInt
-        
+        #
         if ret_sig == -2:
             self.button3.set_sensitive(False)
             self.button4.set_sensitive(True)
@@ -489,6 +495,7 @@ class CopyDialog(Gtk.Window):
         
     def on_report(self):
         if self.freport:
+            time.sleep(0.2)
             # get the new name from the dialog
             winr = gDialog(self, self.freport[0], self.window)
             response = winr.run()
@@ -497,15 +504,14 @@ class CopyDialog(Gtk.Window):
             else:
                 winr.destroy()
 
-    
     def on_notify_foo(self, obj, gparamstring):
         # -2 all tasks finished, -1 tasks interrupted by the user
-        #ret_sig = self.signal.propInt
         ret_sig_name = self.signal.propName
-        self.nlabel.set_text(os.path.basename(str(ret_sig_name)))
+        self.nlabel.set_text(os.path.basename(str(ret_sig_name)))#self.signal.propName))
     
     #
     def on_cancel(self, widget):
+        # -1 stop the copying operation
         self.signal.propInt = -1
         self.can_close = 0
         
@@ -526,8 +532,13 @@ class CopyDialog(Gtk.Window):
         for item in self.list_items:
             name_item = os.path.basename(item)
             dest_path = os.path.join(self.destpath, name_item)
-            # exists or broken link
+            #
             if os.path.exists(dest_path) or os.path.islink(dest_path):
+                # ret = 0 is CANCEL
+                # 1 automatic (backup, anche le cartelle)
+                # 2 overwrite - folders joined
+                # 4 backup the existent files at destination - folders joined
+                # 5 ignore
                 ret = self.on_name_choise()
                 break
         return ret
@@ -544,7 +555,6 @@ class CopyDialog(Gtk.Window):
                 return
         
         if os.path.exists(new_dest_name):
-        
             ret = self.on_new_name("The name", NAME, "already exists.")
             if ret == -6:
                 return ret
@@ -555,11 +565,11 @@ class CopyDialog(Gtk.Window):
                     return ret
             #
             npath = os.path.join(self.destpath, ret)
+            #
             try:
                 shutil.copy2(self.list_items[0], npath, follow_symlinks=False)
             except Exception as E:
                 self.generic_dialog("Error", str(E))
-            
             # the item has been renamed
             return 1
         else:
@@ -580,7 +590,6 @@ class CopyDialog(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-    
     #
     def on_name_choise(self):
         RET = None
@@ -593,7 +602,6 @@ class CopyDialog(Gtk.Window):
             RET = 0
             win3.destroy()
         return RET
-
 
     def on_new_name(self, message1, ndata, message2):
         NEW_NAME = None
@@ -609,7 +617,7 @@ class CopyDialog(Gtk.Window):
         return NEW_NAME
 
 
-# dialogo di scelta se un elemento con lo stesso nome esiste a destinazione
+# an item with the same name is at destination
 class DialogChoose(Gtk.Dialog):
     def __init__(self, parent, window):
         
@@ -623,35 +631,35 @@ class DialogChoose(Gtk.Dialog):
         self.VALUE = 0
         
         box = self.get_content_area()
-        message1 = "An item with the same name already exists."
+        message1 = ICSAMENAME
         label1 = Gtk.Label(label="\n{}\n".format(message1))
         box.add(label1)
         
         self.bbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box.add(self.bbox)
         
-        self.button1 = Gtk.Button(label="AUTOMATIC")
-        self.button1.set_tooltip_text("Make a backup adding a suffix")
+        self.button1 = Gtk.Button(label=ICAUTOMATIC)
+        self.button1.set_tooltip_text(ICAUTOMATICT)
         self.button1.connect("clicked", self.on_button1)
         self.bbox.add(self.button1)
         
-        self.button2 = Gtk.Button(label="OVERWRITE AND MERGE")
-        self.button2.set_tooltip_text("Folders will be merged")
+        self.button2 = Gtk.Button(label=ICOVERWRITE)
+        self.button2.set_tooltip_text(ICOVERWRITET)
         self.button2.connect("clicked", self.on_button2)
         self.bbox.add(self.button2)
         
-        # self.button3 = Gtk.Button(label="RENAME AND MERGE")
-        # self.button3.set_tooltip_text("Files will be renamed, Folders will be merged")
+        # self.button3 = Gtk.Button(label=ICRENAME)
+        # self.button3.set_tooltip_text(ICRENAMET)
         # self.button3.connect("clicked", self.on_button3)
         # self.bbox.add(self.button3)
         
-        self.button4 = Gtk.Button(label="BACKUP AND MERGE")
-        self.button4.set_tooltip_text("The same items at destination will be renamed\nFolders will be merged")
+        self.button4 = Gtk.Button(label=ICBACKUP)
+        self.button4.set_tooltip_text(ICBACKUPT)
         self.button4.connect("clicked", self.on_button4)
         self.bbox.add(self.button4)
         
-        self.button5 = Gtk.Button(label="IGNORE")
-        self.button5.set_tooltip_text("Items will be ignored")
+        self.button5 = Gtk.Button(label=ICIGNORE)
+        self.button5.set_tooltip_text(ICIGNORET)
         self.button5.connect("clicked", self.on_button5)
         self.bbox.add(self.button5)
         
@@ -705,6 +713,7 @@ class DialogRename(Gtk.Dialog):
         self.response(Gtk.ResponseType.OK)
 
 
+# dialog for errors and other events
 class gDialog(Gtk.Dialog):
     def __init__(self, parent, message, window):
         Gtk.Dialog.__init__(self, title="REPORT", transient_for=window, flags=0)
@@ -714,6 +723,9 @@ class gDialog(Gtk.Dialog):
         self.set_default_size(500, 400)
         
         self.box = self.get_content_area()
+        
+        # label = Gtk.Label(label="\n{}:".format(message))
+        # self.box.add(label)
         
         self.create_textview(message)
         
@@ -734,4 +746,3 @@ class gDialog(Gtk.Dialog):
         self.textbuffer = self.textview.get_buffer()
         self.textbuffer.set_text(message)
         scrolledwindow.add(self.textview)
-        

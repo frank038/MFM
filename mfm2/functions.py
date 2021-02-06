@@ -40,3 +40,14 @@ def dcompare(model, row1, row2, user_data):
         return 0
     else:
         return 1
+
+## descending order
+# def dcompare2(model, row1, row2, user_data):
+    # value1 = model.get_value(row1, 9)
+    # value2 = model.get_value(row2, 9)
+    # if value1 < value2:
+        # return -1
+    # elif value1 == value2:
+        # return 0
+    # else:
+        # return 1

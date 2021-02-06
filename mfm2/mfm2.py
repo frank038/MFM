@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main program - v 0.1
+main program - v 0.2
 """
 import gi
 gi.require_version('Gtk', '3.0')
@@ -93,7 +93,7 @@ class mainwindow(Gtk.Window):
     
     def __init__(self):
         # main window
-        Gtk.Window.__init__(self, title="mfm")
+        Gtk.Window.__init__(self, title="mfm2")
                 
         self.wwidth = 800
         self.hheight = 600
@@ -164,8 +164,8 @@ class mainwindow(Gtk.Window):
         self.placessidebar.connect("open-location", self.on_open_location)
         # when right-click on one item
         self.placessidebar.connect("populate-popup", self.on_populate_popup)
-        # an unmout action has been performed
-        self.placessidebar.connect("unmount", self.on_placessidebar_unmount)
+        # # an unmout action has been performed
+        # self.placessidebar.connect("unmount", self.on_placessidebar_unmount)
         #
         # if the Trash folder is open: 0 NO - 1 YES
         self.IS_TRASH_OP = 0
@@ -223,16 +223,17 @@ class mainwindow(Gtk.Window):
 
     # when a sidebar item is clicked
     def on_open_location(self, placessidebar, location, flags):
-        # if it is a valid path
-        if location.get_path():
-            # if it exists
-            if os.path.exists(location.get_path()):
-                wiconview(location.get_path(), self, 1, "")
-            else:
-                self.generic_dialog(MISSED_PATH, location.get_path())
-        if location.get_uri() == "trash:///":
-            if self.IS_TRASH_OP == 0:
-                trash_module.wtrash(self)
+        if location:
+            # if it is a valid path
+            if location.get_path():
+                # if it exists
+                if os.path.exists(location.get_path()):
+                    wiconview(location.get_path(), self, 1, "")
+                else:
+                    self.generic_dialog(MISSED_PATH, location.get_path())
+            if location.get_uri() == "trash:///":
+                if self.IS_TRASH_OP == 0:
+                    trash_module.wtrash(self)
     
     # when right-mouse button is clicked on an item in the placesidebar
     # if it is the recycle bin a new entry is added to the menu
@@ -253,6 +254,7 @@ class mainwindow(Gtk.Window):
             container.pack_start(separator, False, False, 4)
             container.pack_start(button_trash, False, False, 0)
     
+    
     # confirm to empty the recycle bin
     def on_button_trash(self, button):
         messagedialog = Gtk.MessageDialog(parent=self,
@@ -263,6 +265,7 @@ class mainwindow(Gtk.Window):
         messagedialog.connect("response", self.dialog_response)
         messagedialog.show()
 
+
     def dialog_response(self, messagedialog, response_id):
         if response_id == Gtk.ResponseType.OK:
             self.on_empty_clicked()
@@ -272,40 +275,46 @@ class mainwindow(Gtk.Window):
         elif response_id == Gtk.ResponseType.DELETE_EVENT:
             messagedialog.destroy()      
 
+
     def on_empty_clicked(self):
         trash_module.wtrash.request_empty_trash(self.notebook)
 
-    def on_placessidebar_unmount(self, placessidebar, mount_operation):
-        try:
-            unmounted_path = placessidebar.get_location().get_path()
-            self.fcheck_opened_volumes(unmounted_path)
-        except Exception as E:
-            self.generic_dialog("Message", str(E))
-    
-    def fcheck_opened_volumes(self, unmounted_path):
-        
-        num_pages = self.notebook.get_n_pages()
-        
-        if num_pages == 1:
-            
-            hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(0)).get_children()[0].get_label()
-            if unmounted_path[0:len(hlabel)]:
-                if unmounted_path == hlabel[0:len(unmounted_path)]:
-                    
-                    wiconview(HOME, self, 1, "")
-                    self.notebook.remove_page(0)
-                    self.notebook.set_show_tabs(False)
-                    return
-        elif num_pages > 1:
-            for i in reversed(range(num_pages)):
 
-                hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(i)).get_children()[0].get_label()
+    # def on_placessidebar_unmount(self, placessidebar, mount_operation):
+        # try:
+            # placessidebar_location = placessidebar.get_location()
+            # if placessidebar_location:
+                # unmounted_path = placessidebar_location().get_path()
+                # self.fcheck_opened_volumes(unmounted_path)
+        # except Exception as E:
+            # self.generic_dialog("Message", str(E))
+    
+    
+    # # close the tab of unmounted volume if open
+    # def fcheck_opened_volumes(self, unmounted_path):
+        
+        # num_pages = self.notebook.get_n_pages()
+        
+        # if num_pages == 1:
+            
+            # hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(0)).get_children()[0].get_label()
+            # if unmounted_path[0:len(hlabel)]:
+                # if unmounted_path == hlabel[0:len(unmounted_path)]:
+                    
+                    # wiconview(HOME, self, 1, "")
+                    # self.notebook.remove_page(0)
+                    # self.notebook.set_show_tabs(False)
+                    # return
+        # elif num_pages > 1:
+            # for i in reversed(range(num_pages)):
+
+                # hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(i)).get_children()[0].get_label()
                 
-                if unmounted_path[0:len(hlabel)]:
-                    if unmounted_path == hlabel[0:len(unmounted_path)]:
-                        self.notebook.remove_page(i)
-                        if self.notebook.get_n_pages() == 1:
-                            self.notebook.set_show_tabs(False)
+                # if unmounted_path[0:len(hlabel)]:
+                    # if unmounted_path == hlabel[0:len(unmounted_path)]:
+                        # self.notebook.remove_page(i)
+                        # if self.notebook.get_n_pages() == 1:
+                            # self.notebook.set_show_tabs(False)
 
     # generic message dialog
     def generic_dialog(self, message1, message2):
@@ -406,6 +415,7 @@ THUMB_SIZE = THUMB_SIZE2
 # items to copy with copy or cut/paste
 ITEMS_TO_COPY = None
 
+
 class CellRenderer(Gtk.CellRendererPixbuf):
     pixbuflink = GObject.Property(type=str, default="")
     pixbufaccess = GObject.Property(type=str, default="")
@@ -444,7 +454,8 @@ class CellRenderer(Gtk.CellRendererPixbuf):
             pixbuf12 = Gtk.IconTheme.get_default().load_icon("emblem-readonly", LINK_SIZE, 0)
             Gdk.cairo_set_source_pixbuf(cr, pixbuf12, cell_area.x+10, y_offset+ypad)
             cr.paint()
-        
+
+
 class CellArea(Gtk.CellAreaBox):
     
     def __init__(self):
@@ -473,6 +484,7 @@ class CellArea(Gtk.CellAreaBox):
             renderer1.props.wrap_mode = 1
             renderer1.props.style = 1
             self.add_attribute(renderer1, 'text', 7)
+
 #
 class ThumbPix(threading.Thread):
     def __init__(self, working_path, model, IV):
@@ -483,6 +495,7 @@ class ThumbPix(threading.Thread):
 
     def run(self):
         wiconview.evaluate_pixbuf_t(None, self.working_path, self.model, self.IV)
+
 
 class wiconview():
     def __init__(self, working_dir, window, NEW_PAGE, FNAV):
@@ -508,21 +521,17 @@ class wiconview():
             self.working_path = os.path.dirname(working_dir)
         else:
             sys.exit()
-        
         #
-        
         self.IV_selected_items = []
         self.list_clip = []
         self.current_filter_func = "False"
-        
         #
         # main box
         self.IVBox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        
-        # box at top for history and buttons
+        ## box at top for history and buttons
         self.tbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.IVBox.add(self.tbox)
-        ## combobox for visited folders
+        # combobox for visited folders
         self.window.fcb_store.prepend([self.working_path])
         self.fcb = Gtk.ComboBox.new_with_model(self.window.fcb_store)
         self.fcb.set_hexpand(True)
@@ -769,7 +778,7 @@ class wiconview():
             if el.mmodule_type() == 2:
                 el.ModuleCustom(self)
     
-    
+
     #
     def on_folder_changed(self, combo):
         
@@ -778,6 +787,7 @@ class wiconview():
             model = combo.get_model()
             name = model[tree_iter][:2]
             new_path = name[0]
+            #
             if os.access(new_path, os.R_OK):
                 if IV_OPEN_FOLDER == 1:
                     wiconview(new_path, self.window, 1, "")
@@ -795,6 +805,7 @@ class wiconview():
             wiconview(up_dir, self.window, 0, "")
         else:
             self.generic_dialog("Error", "Cannot change folder.")
+    
     
     # 
     def fill_model(self, model, npath):
@@ -904,6 +915,7 @@ class wiconview():
         self.monitor.props.rate_limit = 100
         self.monitor.connect("changed", self.dir_changed)
 
+
     #
     def fcheck_opened_folders(self, file_path):
         
@@ -927,6 +939,7 @@ class wiconview():
                         self.notebook.set_show_tabs(False)
                     break
                     return
+    
     
     # the monitor
     def dir_changed(self, monitor, file, other_file, event):
@@ -1202,38 +1215,66 @@ class wiconview():
                     else:
                         self.model.append([pixbuf, ibasename, "b", idirname, "False", None, file_acc, None, None])
         
-        if IV_USE_OPT_INFO == 1:
-            module1.add_description(self.model)
+        if event in [Gio.FileMonitorEvent.CHANGED, Gio.FileMonitorEvent.CHANGES_DONE_HINT, Gio.FileMonitorEvent.ATTRIBUTE_CHANGED,
+                     Gio.FileMonitorEvent.RENAMED, Gio.FileMonitorEvent.MOVED_OUT, Gio.FileMonitorEvent.DELETED,
+                     Gio.FileMonitorEvent.MOVED_IN, Gio.FileMonitorEvent.CREATED]:
+            
+            if IV_USE_OPT_INFO == 1:
+                module1.add_description(self.model)
+            
+            # deselect everything
+            if len(self.IV.get_selected_items()) > 0:
+                self.ppoint = 1
+                self.IV_selected_items = []
+                for rrow in self.IV.get_selected_items():
+                    self.IV.unselect_path(rrow)
+                self.ppoint = 0
+            
+            # restore the labels
+            if os.path.exists(self.working_path):
+                visible_item, hidden_item = self.num_itemh(self.working_path)
+                self.label300name.set_label(IPATH)
+                # 
+                self.label301name.set_line_wrap_mode(0)
+                self.label301name.set_label(self.working_path)
+                self.label300path.set_label(IITEMS)
+                self.label302path.set_label("{}".format(visible_item))
+                self.label300type.set_label(IHIDDEN)
+                self.label303type.set_label("{}".format(hidden_item))
+                self.label300size.set_label("")
+                self.label304size.set_label("")
+                self.label300size.set_label(ISIZE2)
+                self.label304size.set_label("{}".format(convert_size2(shutil.disk_usage(self.working_path).free)))
+        # check if a tab is open when a volume is unmounted
+        elif event == Gio.FileMonitorEvent.UNMOUNTED:
+            self.fcheck_opened_volumes(file.get_path())
         
-        # deselect everything
-        if len(self.IV.get_selected_items()) > 0:
-            self.ppoint = 1
-            self.IV_selected_items = []
-            for rrow in self.IV.get_selected_items():
-                self.IV.unselect_path(rrow)
-            self.ppoint = 0
-        
-        # restore the labels
-        if os.path.exists(self.working_path):
-            visible_item, hidden_item = self.num_itemh(self.working_path)
-            self.label300name.set_label(IPATH)
-            # 
-            self.label301name.set_line_wrap_mode(0)
-            self.label301name.set_label(self.working_path)
-            self.label300path.set_label(IITEMS)
-            self.label302path.set_label("{}".format(visible_item))
-            self.label300type.set_label(IHIDDEN)
-            self.label303type.set_label("{}".format(hidden_item))
-            self.label300size.set_label("")
-            self.label304size.set_label("")
-            self.label300size.set_label(ISIZE2)
-            self.label304size.set_label("{}".format(convert_size2(shutil.disk_usage(self.working_path).free)))
-                
         self.IV.grab_focus()
     
+    
+    # close the tab of unmounted volume if open
+    def fcheck_opened_volumes(self, unmounted_path):
+        num_pages = self.notebook.get_n_pages()
+        if num_pages == 1:
+            hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(0)).get_children()[0].get_label()
+            if unmounted_path == hlabel:
+                wiconview(HOME, self.window, 1, "")
+                self.notebook.remove_page(0)
+                self.notebook.set_show_tabs(False)
+                return
+        elif num_pages > 1:
+            for i in reversed(range(num_pages)):
+                hlabel = self.notebook.get_tab_label(self.notebook.get_nth_page(i)).get_children()[0].get_label()
+                if unmounted_path == hlabel:
+                    self.notebook.remove_page(i)
+                    if self.notebook.get_n_pages() == 1:
+                        self.notebook.set_show_tabs(False)
+    
+
     # stop a monitor
     def monitor_stop(self):
         self.monitor.cancel()
+    
     
     #
     def on_double_click(self, IV, treepath):
@@ -1350,6 +1391,7 @@ class wiconview():
                         pixbuf = Gtk.IconTheme.get_default().load_icon("empty", ICON_SIZE, 0)   
                         return pixbuf
     
+    
     def evaluate_pixbuf_t(self, working_path, model, IV):
         time.sleep(0.001)
         iitem = os.listdir(working_path)
@@ -1395,6 +1437,7 @@ class wiconview():
         else:
             return model[iter][4] == self.current_filter_func
 
+
     def on_toggle_htb(self, htb):
         
         if self.current_filter_func == "False":
@@ -1409,7 +1452,6 @@ class wiconview():
     
     # show hidden items - invert the selection
     def ftbbox(self):
-
         pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size("add.svg", HTB_SSR, HTB_SSR)
         imagel = Gtk.Image.new_from_pixbuf(pixbuf)
         htb = Gtk.ToggleButton(label="", image=imagel)
@@ -1468,6 +1510,7 @@ class wiconview():
         buttonclose.show()
         return box200
 
+
     def create_info_page(self, item_name, working_dir):
         # create a new box
         self.npmainbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -1490,6 +1533,7 @@ class wiconview():
         labelinfo.set_markup("<span size='small'>"+INFO_NAME+"</span>")
         self.notebook2.append_page(pagen, labelinfo)
 
+
     # find the mimetype of selected item
     def item_mime(self, path):
         imime = ''
@@ -1501,6 +1545,7 @@ class wiconview():
         except:
             pass
         return imime
+
 
     #  find the size of selected item
     def item_size(self, path):
@@ -1521,6 +1566,7 @@ class wiconview():
         
         return sfsize
 
+
     # find the size of folders
     def folder_size(self, path):
         total_size = 0
@@ -1534,19 +1580,23 @@ class wiconview():
                     total_size += os.path.getsize(flp)
         return total_size
 
+
     # close button in the page of notebook1
     def on_buttonclose_clicked(self, buttonclose, page):
         self.IV.unselect_all()
         curpage = self.notebook.page_num(page)
         numpage = self.notebook.get_n_pages()
         if numpage > 1:
+            self.monitor_stop()
             page.destroy()
         if (numpage - 1) == 1:
             self.notebook.set_show_tabs(False)
 
+
     # when CTRL+ALT+A 
     def on_unselect_all(self, infopixbuf, visible_item, hidden_item):
         self.unselect_all_common(infopixbuf, visible_item, hidden_item)
+
 
     def unselect_all_common(self, infopixbuf, visible_item, hidden_item):
         self.IV.unselect_all()
@@ -1555,6 +1605,7 @@ class wiconview():
         infopixbuf = Gtk.Image.new_from_pixbuf(self.evaluate_pixbuf(working_dir, NB2_ICON_SIZE))
         self.npmainbox.pack_start(infopixbuf, False, False, 20)
         infopixbuf.show()
+
 
     # invert the selection
     def on_invsel_button(self, invsel_button):
@@ -1709,7 +1760,7 @@ class wiconview():
 
         if DATE_TIME == 0:
             try:
-                mctime = datetime.datetime.fromtimestamp(os.stat(self.item_path).st_ctime).strftime('%c')
+                mctime = datetime.datetime.fromtimestamp(os.stat(item_path).st_ctime).strftime('%c')
             except:
                 mctime = 0
         elif DATE_TIME == 1:
@@ -1798,10 +1849,12 @@ class wiconview():
                     mpop = Gtk.Menu()
                     self.populate_menu(mpop) 
     
+    
     def on_mouse_release(self, IV, event):
         for tpath in IV.get_selected_items():
             if not tpath in self.IV_selected_items:
                 self.IV_selected_items.append(tpath)
+    
     
     # right click menu on background
     def populate_background_menu(self, mpop):
@@ -1890,8 +1943,10 @@ class wiconview():
                     pass
         
         mpop.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+        time.sleep(0.3)
         mpop.show_all()
         self.IV.grab_focus()
+
 
     # create a new folder
     def new_folder(self, widget):
@@ -1918,6 +1973,7 @@ class wiconview():
         
         self.IV.grab_focus()
     
+    
     # create a new file
     def new_file(self, widget):
         dest_file = os.path.join(self.working_path, INEWFILE)
@@ -1943,6 +1999,7 @@ class wiconview():
         
         self.IV.grab_focus()
     
+    
     # copy the template at destination
     def template_activated(self, widget, dir_templates, model):
         src = os.path.join(dir_templates, model)
@@ -1960,6 +2017,7 @@ class wiconview():
                 self.generic_dialog("\n"+str(e), "")
         
         self.IV.grab_focus()
+    
     
     # open with other applications
     def on_other_applications(self, widget, fpath):
@@ -1981,6 +2039,7 @@ class wiconview():
         else:
             dialog.destroy()
     
+    
     # open the file with the program choosen
     def on_open_aa(self, widget, executable, fpath):
         if shutil.which(executable):
@@ -1988,6 +2047,7 @@ class wiconview():
                 subprocess.Popen([executable, fpath])
             except Exception as e:
                 self.generic_dialog("\n"+str(e), "")
+
 
     # open the selected folder in a new tab
     def on_open_in_a_new_tab(self, widget, fpath):
@@ -2007,7 +2067,7 @@ class wiconview():
         #
         nfile = self.modello[rrow][1]
         fpath = os.path.join(self.working_path, nfile)
-        
+        #
         if self.modello[rrow][2] == "a":
             itemnf = Gtk.MenuItem(label=IOPENNT)
             mpop.append(itemnf)
@@ -2087,6 +2147,7 @@ class wiconview():
         mpop.append(item0020)
         # if no data to paste set item to insensitive
         item0020.set_sensitive(False)
+        
         #
         if ITEMS_TO_COPY:
             item0020.set_sensitive(True)
@@ -2156,7 +2217,9 @@ class wiconview():
                     pass
         
         mpop.popup(None, None, None, None, 0, Gtk.get_current_event_time())
+        time.sleep(0.3)
         mpop.show_all()
+        self.IV.grab_focus()
 
     
     # the command to execute for the selected item in the menu
@@ -2165,6 +2228,7 @@ class wiconview():
             subprocess.Popen(mcommand, universal_newlines=True)
         else:
             el.ModuleClass(self)
+    
     
     # make a link
     def make_link(self, widget, nfile):
@@ -2206,11 +2270,21 @@ class wiconview():
 ############## DELETE
 
     def trash_item(self, widget):
+        dialog = DialogYN(self.window, "Message", IMOVETOTRASHMSG)
+        response = dialog.run()
+        self.IV.grab_focus()
+        #
+        if response == Gtk.ResponseType.OK:
+            dialog.destroy()
+        elif response == Gtk.ResponseType.CANCEL:
+            dialog.destroy()
+            return
+        #
         for i in range(len(self.IV.get_selected_items())):
             rrow = self.IV.get_selected_items()[i]
             nfile = self.modello[rrow][1]
             path = os.path.join(self.working_path, nfile)
-            # 
+            # only the home trashcan is handled
             if path[0:5] != "/home":
                 return
             gio_file = Gio.File.new_for_path(path)
@@ -2227,7 +2301,18 @@ class wiconview():
         self.IV.grab_focus()
 
     
+    # delete the items by RMB menu
     def delete_item(self, widget):
+        dialog = DialogYN(self.window, "Message", IDELETEMSG2)
+        response = dialog.run()
+        self.IV.grab_focus()
+        #
+        if response == Gtk.ResponseType.OK:
+            dialog.destroy()
+        elif response == Gtk.ResponseType.CANCEL:
+            dialog.destroy()
+            return
+        #
         for i in range(len(self.IV.get_selected_items())):
             rrow = self.IV.get_selected_items()[i]
             nfile = self.modello[rrow][1]
@@ -2275,6 +2360,7 @@ class wiconview():
             sent_items = cc_list.encode()
             
             try:
+                # add to list
                 global ITEMS_TO_COPY
                 ITEMS_TO_COPY = items_copy_clip.copyClip(self.working_path, sent_items, 0).listReturn()
             except Exception as e:
@@ -2289,12 +2375,15 @@ class wiconview():
         #
         if ITEMS_TO_COPY:
             if ITEMS_TO_COPY != -1:
+                # or_dir = os.path.dirname(DATA2[0])
                 items_copy.CopyDialog(self.working_path, ITEMS_TO_COPY, self.window, 0)
                 # reset
                 ITEMS_TO_COPY = None
             # with clipboard in the module
             else:
                 items_copy_clip.copyClip(self.working_path, ITEMS_TO_COPY, 0)
+        
+        #self.IV.grab_focus()
 
 
     # paste item(s)
@@ -2319,6 +2408,7 @@ class wiconview():
                 sfile = model[rrow][1]
                 path = os.path.join(self.working_path, sfile)
                 
+                #if os.access(path, os.R_OK):
                 # only if items are links or regular files or folders
                 if os.path.isfile(path) or os.path.isdir(path) or os.path.islink(path):
                     lfpath += "\n"
@@ -2370,6 +2460,7 @@ class wiconview():
             #### manage the data
             # not in the same folder
             dest_path = os.path.dirname(DATA[0])
+            #
             if dest_path[7:] == self.working_path:
                 context.finish(False, False, time)
                 return
@@ -2457,6 +2548,23 @@ class DialogRename(Gtk.Dialog):
 
     def on_return(self):
         return self.IVBox
+
+
+# yes/no generic dialog
+class DialogYN(Gtk.Dialog):
+    def __init__(self, parent, title, msg):
+        Gtk.Dialog.__init__(self, title=title, transient_for=parent, flags=0)
+        self.add_buttons(
+            Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK
+        )
+
+        self.set_default_size(150, 100)
+
+        label = Gtk.Label(label=msg)
+
+        box = self.get_content_area()
+        box.add(label)
+        self.show_all()
 
 #############
 

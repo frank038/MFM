@@ -130,10 +130,11 @@ class wtrash():
         scrolledwindow.set_policy(Gtk.PolicyType.NEVER,  Gtk.PolicyType.AUTOMATIC)
         
         # iconview
-        iconview = Gtk.IconView.new_with_area(CellArea())
-        scrolledwindow.add(iconview)
-        iconview.set_item_width(IV_ITEM_WIDTH)
+        self.iconview = Gtk.IconView.new_with_area(CellArea())
+        scrolledwindow.add(self.iconview)
+        self.iconview.set_item_width(IV_ITEM_WIDTH)
         #item icon - item name - is_folder - working_dir - is_hidden - is_link - access - mountpoint - fake name - deletion date
+        # 
         self.model = Gtk.ListStore(Pixbuf, str, str, str, str, str, str, str, str, str)
         global tmodel
         tmodel = self.model
@@ -147,14 +148,15 @@ class wtrash():
         elif TR_SORT == 2:
             self.model.set_sort_func(10, dcompare, None)
             self.model.set_sort_column_id(10, Gtk.SortType.DESCENDING)
-        iconview.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
-        iconview.set_model(self.model)
+        self.iconview.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
+        self.iconview.set_model(self.model)
         ########
         lpartitions = ["/"]
         self.lista = self.trashed_items(lpartitions)
         
         # items from trashinfos
         for elem in self.lista:
+            # mount point - /
             mmountp = elem.mountpoint
             # fake name
             ritem = elem.fakename
@@ -168,8 +170,8 @@ class wtrash():
             ddate_d, ddate_t = elem.deletiondate.split("T")
             ddate = ddate_d+" "+ddate_t
             #
-            self.populate_view(mmountp, ritem, iitem, wpath, ffile, ddate)
-            
+            self.populate_view(mmountp, ritem, wpath, ffile, ddate)
+        
         ## add items that dont have associated trashinfo files for some reasons
         ck_orphan_items_temp = os.listdir(TRASH_FOLDER_FILES)
         ck_orphan_items = []
@@ -185,8 +187,8 @@ class wtrash():
                 orphan_items.append(item)
         # add them to the view
         for item in orphan_items:
-            ddate = "(Info file missed or damaged)"
-            self.populate_view("/", item, os.path.join(HOME, item), HOME, item, ddate)
+            ddate = TIFILEMD
+            self.populate_view("/", item, HOME, item, ddate)
         #
         #### NOTEBOOK2
         notebook2 = Gtk.Notebook()
@@ -313,7 +315,7 @@ class wtrash():
         buttonclose = Gtk.Button()
         buttonclose.set_image(image)
         buttonclose.set_relief(Gtk.ReliefStyle.NONE)
-        buttonclose.connect("clicked", self.on_buttonclose_clicked, page, iconview)
+        buttonclose.connect("clicked", self.on_buttonclose_clicked, page)
         lbox.pack_start(label200, True, True, 0)
         lbox.add(buttonclose)
         label200.show()
@@ -331,14 +333,14 @@ class wtrash():
         self.notebook.set_current_page(numpage-1)
         ########
         ## single click on item
-        iconview.connect("selection-changed", self.on_selection_changed_trash)
+        self.iconview.connect("selection-changed", self.on_selection_changed_trash)
         # double click on item
-        iconview.connect("item-activated", self.on_double_click_trash)
+        self.iconview.connect("item-activated", self.on_double_click_trash)
         #
-        iconview.connect("unselect-all", self.on_unselect_all_trash)
+        self.iconview.connect("unselect-all", self.on_unselect_all_trash)
         #
-        self.button_restore.connect("clicked", self.on_button_restore, iconview) 
-        self.button_delete.connect("clicked", self.on_button_delete, iconview) 
+        self.button_restore.connect("clicked", self.on_button_restore) 
+        self.button_delete.connect("clicked", self.on_button_delete) 
         #
         IVBox.show_all()
         # only one trash tab can be open
@@ -349,8 +351,8 @@ class wtrash():
             self.monitor_dir(TRASH_FOLDER_FILES)
 
     # populate this module view by the trashinfo files
-    def populate_view(self, mmountp, ritem, iitem, wpath, ffile, ddate):
-        #
+    def populate_view(self, mmountp, ritem, wpath, ffile, ddate):
+        # only the home dir
         if wpath[0:5] == "/home":
             # check if the item exists in TRASH_FOLDER_FILES
             if not os.path.exists(os.path.join(TRASH_FOLDER_FILES, ritem)):
@@ -391,7 +393,7 @@ class wtrash():
             else:
                 pixbuf = self.evaluate_pixbuf(os.path.join(TRASH_FOLDER_FILES, ritem), ICON_SIZE2)
                 self.model.append([pixbuf, ffile, "b", wpath, "False", None, file_acc, mmountp, ritem, ddate])
-        
+    
 ################ trash folder monitor
 
     # start a monitor
@@ -413,12 +415,13 @@ class wtrash():
         ## - an item has been moved into the trashcan
         elif event == Gio.FileMonitorEvent.MOVED_IN:
             name_file = os.path.basename(file.get_path())
-            #### A: add the item in the list of items
+            #### add the item in the list of items
             ret = 0
             info_path = TRASH_FOLDER_INFO+"/"+name_file+".trashinfo"
             iit = 0
             got_info = 0
             ret = os.path.exists(info_path)
+            # check three times the trashinfo
             while ret == False:
                 iit += 1
                 time.sleep(0.5)
@@ -448,14 +451,15 @@ class wtrash():
                     diskpart.realname = path_line
                     diskpart.deletiondate = date_line
                     self.lista.append(diskpart)
-                    #
+                    
                     ret = 0
             
-            ##### B: add the item in self.model
+            ##### add the item in self.model
+            # only home dir
             if file.get_path()[0:5] == "/home":
                 # no trashinfo no some infos
                 if got_info == 0:
-                    ddate = "(info file missed or damaged)"
+                    ddate = TIFILEMD
                     # realname cannot be get
                     ffile = os.path.basename(file.get_path())
                     #
@@ -493,7 +497,7 @@ class wtrash():
                     elif os.path.isfile(TRASH_FOLDER_FILES+"/"+ritem):
                         pixbuf = self.evaluate_pixbuf(os.path.join(TRASH_FOLDER_FILES, ritem), ICON_SIZE2)
                         self.model.append([pixbuf, ffile, "b", wpath, "False", "True", file_acc, mmountp, ritem, ddate])
-                    # if else
+                    # other
                     else:
                         pixbuf = self.evaluate_pixbuf(os.path.join(TRASH_FOLDER_FILES, ritem), ICON_SIZE2)
                         self.model.append([pixbuf, ffile, "b", wpath, "False", "True", file_acc, mmountp, ritem, ddate])
@@ -505,11 +509,14 @@ class wtrash():
                 elif os.path.isfile(TRASH_FOLDER_FILES+"/"+ritem):
                     pixbuf = self.evaluate_pixbuf(os.path.join(TRASH_FOLDER_FILES, ritem), ICON_SIZE2)
                     self.model.append([pixbuf, ffile, "b", wpath, "False", None, file_acc, mmountp, ritem, ddate])
-                # if other kind of item
+                # other kind of item
                 else:
                     pixbuf = self.evaluate_pixbuf(os.path.join(TRASH_FOLDER_FILES, ritem), ICON_SIZE2)
                     self.model.append([pixbuf, ffile, "b", wpath, "False", None, file_acc, mmountp, ritem, ddate])
 
+    # stop a monitor
+    def monitor_stop(self):
+        self.monitor_dir.cancel()
         
 ########################
     
@@ -670,8 +677,8 @@ class wtrash():
         return imime
 
     # close button in page of notebook1
-    def on_buttonclose_clicked(self, buttonclose, page, iconview):
-        iconview.unselect_all()
+    def on_buttonclose_clicked(self, buttonclose, page):
+        self.iconview.unselect_all()
         curpage = self.notebook.page_num(page)
         numpage = self.notebook.get_n_pages()
         if numpage > 1:
@@ -720,7 +727,10 @@ class wtrash():
                             diskpart.realname = path
                             diskpart.deletiondate = date_line
                             list_fakereal.append(diskpart)
-                            
+                #
+                else:
+                    self.generic_dialog("Error", "Trash not readable.")
+        #
         return list_fakereal             
 
     # find the right pixbuf for all folder and file
@@ -753,12 +763,12 @@ class wtrash():
                         pixbuf = Gtk.IconTheme.get_default().load_icon("empty", ICON_SIZE2, 0)
                         return pixbuf
     
-    def on_button_restore(self, button_restore, iconview):
-        rrows = iconview.get_selected_items()
+    def on_button_restore(self, button_restore):
+        rrows = self.iconview.get_selected_items()
         
         dresponse = 0
         if rrows:
-            dialog = DialogYN(self.window, "Message", "Restore the selected items?")
+            dialog = DialogYN(self.window, "Message", TRESTOREMSG2)
             response = dialog.run()
             
             if response == Gtk.ResponseType.OK:
@@ -774,7 +784,7 @@ class wtrash():
             src = ""
             if self.model[rrow][7] == "/":
                 src = os.path.join(TRASH_FOLDER_FILES, self.model[rrow][8])
-            
+            #
             dst = os.path.join(self.model[rrow][3], self.model[rrow][1])
             name_file = self.model[rrow][1]
             if os.path.exists(dst):
@@ -795,7 +805,7 @@ class wtrash():
                 try:
                     if self.model[rrow][7] == "/":
                         info_path = os.path.join(TRASH_FOLDER_INFO, self.model[rrow][8])+".trashinfo"
-                    
+                    #
                     os.remove(info_path)
                     iter = self.model.get_iter(rrow)
                     if TR_UPD == 0:
@@ -806,14 +816,13 @@ class wtrash():
                 pass
     
     # restore the item from the program
-    def on_button_delete(self, button_delete, iconview):
-        rrows = iconview.get_selected_items()
-        
+    def on_button_delete(self, button_delete):
+        rrows = self.iconview.get_selected_items()
         dresponse = 0
         if rrows:
-            dialog = DialogYN(self.window, "Message", "Delete the selected items?")
+            dialog = DialogYN(self.window, "Message", TDELETEMSG2)
             response = dialog.run()
-            
+            #
             if response == Gtk.ResponseType.OK:
                 dresponse = 1
                 dialog.destroy()
@@ -823,13 +832,16 @@ class wtrash():
         if dresponse == 0:
             return
         for rrow in rrows:
+            ###
             file_path = ""
             if self.model[rrow][7] == "/":
                 file_path = os.path.join(TRASH_FOLDER_FILES, self.model[rrow][8])
+            #
             name_file = self.model[rrow][1]
             info_path = ""
             if self.model[rrow][7] == "/":
                 info_path = os.path.join(TRASH_FOLDER_INFO, self.model[rrow][8])+".trashinfo"
+            #
             try:
                 os.remove(info_path)
                 os.remove(file_path)
@@ -839,7 +851,6 @@ class wtrash():
             except Exception as e:
                 self.generic_dialog("", str(e))
 
-    
     # restore the item
     def trash_restore(self, src, dst):
         try:
@@ -857,7 +868,6 @@ class wtrash():
         curr_tab_label = notebook.get_tab_label(curr_page)
         hlabel = curr_tab_label.get_children()[0].get_label()
         is_trash_empty = False
-        
         llpartitions = ["/"]
         
         if hlabel == "hTrash":
@@ -913,7 +923,6 @@ class wtrash():
 
     # empty the recycle bin - all partitions
     def trash_empty_all():
-        
         lpartitions = ["/"]
         #
         for tpath in lpartitions:

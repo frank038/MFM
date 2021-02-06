@@ -4,6 +4,7 @@ from urllib.parse import unquote, quote
 class copyClip:
     def __init__(self, working_path, list_file, flag):
         self.working_path = working_path
+        # string
         self.list_file = list_file
         self.list_items = unquote(self.list_file.decode()).split('\n')
     

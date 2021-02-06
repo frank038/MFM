@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""
+add one page in the notebook2
+"""
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Pango
+
+module_name = "Test custom module 2"
+
+# 1 window - 2 notebook
+module_type = 2
+
+def mmodule_type():
+    return module_type
+
+class ModuleCustom():
+    
+    def __init__(self, wiconview):
+        self.wiconview = wiconview
+        self.page = Gtk.Box()
+        self.label = Gtk.Label("Custom Module")
+        self.label.set_line_wrap(True)
+        self.label.set_line_wrap_mode(2)
+        self.page.add(self.label)
+        label_page = Gtk.Label("Test Page")
+        self.modify_widget_font(label_page)
+        if wiconview != None:
+            wiconview.notebook2.append_page(self.page, label_page)
+        self.page.show_all()
+    
+    def modify_widget_font(self, widget):
+        context_labelinfo = widget.get_style_context()
+        labelinfo_fontfamily = context_labelinfo.get_font(Gtk.StateType.NORMAL).get_family()
+        labelinfo_fontsize = context_labelinfo.get_font(Gtk.StateType.NORMAL).get_size() / 1024
+        labelinfo_font = context_labelinfo.get_font(Gtk.StateType.NORMAL).get_size() / 1024 * Pango.SCALE * 0.5
+        labelinfo_new_style = str(labelinfo_fontfamily+" "+str(int(labelinfo_fontsize * Pango.SCALE * 0.8 / 1024)))
+        widget.modify_font(Pango.FontDescription(labelinfo_new_style))
+
+def on_change_npage(wiconview):
+
+    label = ModuleCustom(None).label
+    page = wiconview.notebook2.get_nth_page(2)
+    label = page.get_children()[0]
+    if len(wiconview.IV.get_selected_items()) == 1:
+        row = wiconview.IV.get_selected_items()[0]
+        model = wiconview.IV.get_model()
+        item_name = model[row][1]
+        label.set_label("Selected: {}".format(item_name))
+    else:
+        label.set_label("Selected: None")

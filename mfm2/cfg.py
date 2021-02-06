@@ -5,19 +5,19 @@ ITSIZE = 24
 USE_HEADB = 0
 ### iconview module
 # icon size
-ICON_SIZE2 = 64
+ICON_SIZE2 = 96
 # link symbol size
-LINK_SIZE2 = 24
+LINK_SIZE2 = 32
 # icon size in notebook2
-NB2_ICON_SIZE = 64
+NB2_ICON_SIZE = 96
 # use thumbnailers: 0 No - 1 Yes
 USE_THUMB = 0
 # thumbnail image size
-THUMB_SIZE2 = 96
+THUMB_SIZE2 = 128
 # size of the notebook2 buttons
 HTB_SSR = 36
 # iconview item with - -1 automatic
-IV_ITEM_WIDTH = 128
+IV_ITEM_WIDTH = 220
 # double click on a folder: 1 open a new tab - 0 close the parent tab
 IV_OPEN_FOLDER = 0
 # add optional text to each icon other then name: 0 NO, 1 Yes
@@ -28,6 +28,10 @@ IV_MULTI_SIZE = 1
 IV_MULTI_SEL = 0
 # use the drag and drop: 0 no - 1 yes 
 IV_DND = 1
+# creation data and time of the item: 0 use os.stat - 1 use functions from bash (should be precise)
+DATE_TIME = 1
+# list view: data column: 0 modification date - 1 creation date
+LV_DATE_TIME = 0
 ### trash module
 # date: 0 no - 1 yes
 TR_DATE = 1
@@ -39,9 +43,6 @@ TR_UPD = 1
 ### items_copy
 # 0 use number _(#) - 1 use date (do not check) 
 USE_DATE = 0
-
-### creation data and time of the item: 0 use os.stat - 1 use functions from bash (should be precise)
-DATE_TIME = 1
 
 ### needed by pythumb
 # border color of thumbnail

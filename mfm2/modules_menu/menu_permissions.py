@@ -89,7 +89,8 @@ class ModuleClass(Gtk.Window):
         label_owner.props.xalign = 1
         label_owner_access = Gtk.Label()
         label_owner_access.set_markup("<i>"+PACCESS+"</i>")
-        label_group = Gtk.Label(PGROUP)
+        label_group = Gtk.Label()
+        label_group.set_markup("<i>"+PGROUP+"</i>")
         label_group.props.xalign = 1
         label_group_access = Gtk.Label()
         label_group_access.set_markup("<i>"+PACCESS+"</i>")
@@ -241,7 +242,6 @@ class ModuleClass(Gtk.Window):
         cb_state = cb.get_active()
         # get the permissions on the item
         old_perms = oct(os.stat(item_path).st_mode)[-3:]
-        #print("old perms", old_perms)
         #
         aa = -1
         if cb_state:
