@@ -2,6 +2,8 @@
 A file manager written in python and gtk3.
 (work in testing)
 
+Free to use and modify.
+
 Features:
 - drag and drop;
 - copy/cut/paste (within the same program due to inexistent methods in pygtk3);
