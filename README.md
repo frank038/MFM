@@ -13,4 +13,6 @@ Features:
 - a lot of options can be enabled or disabled in the config file (cfg.py);
 - some kind of customization.
 
+Under Wayland, the option UPDATE_PROGRAM_SIZE must be 0.
+
 ![My image](https://github.com/frank038/MFM/blob/main/screenshot1.png)
