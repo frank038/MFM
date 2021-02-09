@@ -6,7 +6,7 @@ Free to use and modify.
 
 Features:
 - drag and drop;
-- copy/cut/paste (within the same program due to inexistent methods in pygtk3);
+- copy/cut/paste (within the same program due to inexistent methods in pygtk3), the copying operation can be interrupted by the user (only for the items not copied yet);
 - thumbnails and thumbnailers (require PIL for images, pdftocairo for pdf files and ffmpegthumbnailer for video files), 7z for extracting archives (also with password); more can be added for supporting almost all kind of files;
 - trash (of the home dir) with items sorted by deletion data or name;
 - custom modules;
