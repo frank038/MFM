@@ -121,7 +121,7 @@ class cThread(threading.Thread):
             commSfx = "_{}.{}.{}_{}.{}.{}".format(z.year, z.month, z.day, z.hour, z.minute, z.second)
         #
         for dfile in self.item_list:
-            self.event.wait(0.1)
+            self.event.wait(0.3)
             
             # interrupted by the user
             if self.signal.propInt == -1:
@@ -507,7 +507,7 @@ class CopyDialog(Gtk.Window):
     def on_notify_foo(self, obj, gparamstring):
         # -2 all tasks finished, -1 tasks interrupted by the user
         ret_sig_name = self.signal.propName
-        self.nlabel.set_text(os.path.basename(str(ret_sig_name)))#self.signal.propName))
+        self.nlabel.set_text(os.path.basename(str(ret_sig_name)))
     
     #
     def on_cancel(self, widget):
